@@ -15,14 +15,26 @@ public class VisualGameManager : NetworkBehaviour
 
     private void GameManager_OnClickedGridPosition(object sender, GameManager.OnClickedGridPositionEventArgs e)
     {
-        SpawnObjectRpc(e.x, e.y);
+        SpawnObjectRpc(e.x, e.y, e.playerType);
     }
 
     [Rpc(SendTo.Server)]
-    private void SpawnObjectRpc(int x, int y)
+    private void SpawnObjectRpc(int x, int y, GameManager.PlayerType playerType)
     {
-        Transform crossTransform = Instantiate(crossPrefab, GetGridWorldPosition(x, y), Quaternion.identity);
-        crossTransform.GetComponent<NetworkObject>().Spawn(true);
+        Transform prefab;
+        switch (playerType)
+        {
+            default:
+            case GameManager.PlayerType.Cross:
+                prefab = crossPrefab;
+                break;
+            case GameManager.PlayerType.Circle:
+                prefab = circlePrefab;
+                break;
+        }
+
+        Transform prefabTransform = Instantiate(prefab, GetGridWorldPosition(x, y), Quaternion.identity);
+        prefabTransform.GetComponent<NetworkObject>().Spawn(true);
     }
 
     private Vector3 GetGridWorldPosition(int x, int y)
