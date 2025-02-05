@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 32759299}
   - component: {fileID: 32759297}
   m_Layer: 0
-  m_Name: VIsualGameManager
+  m_Name: VisualGameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -152,6 +152,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   crossPrefab: {fileID: 6575209026060838220, guid: 5fc2f96c3913a4c3db5d5ba83daaacb6, type: 3}
   circlePrefab: {fileID: 6575209026060838220, guid: 7ebe3b602fd2a4b009324bfc455d7ae3, type: 3}
+  lineCompletePrefab: {fileID: 34779793861539517, guid: a0822d7a1b63e4bcd832193a6a9d62d0, type: 3}
 --- !u!4 &32759298
 Transform:
   m_ObjectHideFlags: 0
