@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,10 +8,32 @@ public class VisualGameManager : NetworkBehaviour
 
     [SerializeField] private Transform crossPrefab;
     [SerializeField] private Transform circlePrefab;
+    [SerializeField] private Transform lineCompletePrefab;
 
     private void Start()
     {
         GameManager.Instance.OnClickedGridPosition += GameManager_OnClickedGridPosition;
+        GameManager.Instance.OnGameWin += GameManager_OnGameWin;
+    }
+
+    private void GameManager_OnGameWin(object sender, GameManager.OnGameWinEventArgs e)
+    {
+        float eulerZ = 0f;
+        switch (e.line.orientation)
+        {
+            default:
+            case GameManager.Orientation.Horizontal:    eulerZ = 0;  break;
+            case GameManager.Orientation.Vertical:      eulerZ = 90;  break;
+            case GameManager.Orientation.DiagonalA:     eulerZ = 45;  break;
+            case GameManager.Orientation.DiagonalB:     eulerZ = -45;  break;
+        }
+        Transform lineTransform =
+            Instantiate(
+                lineCompletePrefab,
+                GetGridWorldPosition(e.line.centerGridPosition.x, e.line.centerGridPosition.y),
+                Quaternion.Euler(0f, 0f, eulerZ)
+                );
+        lineTransform.GetComponent<NetworkObject>().Spawn(true);
     }
 
     private void GameManager_OnClickedGridPosition(object sender, GameManager.OnClickedGridPositionEventArgs e)
