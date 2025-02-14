@@ -18,6 +18,11 @@ public class VisualGameManager : NetworkBehaviour
 
     private void GameManager_OnGameWin(object sender, GameManager.OnGameWinEventArgs e)
     {
+        if(!NetworkManager.Singleton.IsServer)
+        {
+            return;
+        }
+
         float eulerZ = 0f;
         switch (e.line.orientation)
         {

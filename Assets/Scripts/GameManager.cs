@@ -19,6 +19,7 @@ public class GameManager : NetworkBehaviour
     public class OnGameWinEventArgs : EventArgs
     {
         public Line line;
+        public PlayerType winPlayerType;
     }
 
     public enum PlayerType
@@ -216,19 +217,27 @@ public class GameManager : NetworkBehaviour
 
     private void TestWinner()
     {
-        foreach(Line line in lineList)
+        for (int i = 0; i < lineList.Count; i++)
         {
-            if (TestWinnerLine(line))
+            if (TestWinnerLine(lineList[i]))
             {
                 currentlyPlayablePlayerType.Value = PlayerType.None;
 
-                OnGameWin?.Invoke(this, new OnGameWinEventArgs
-                {
-                    line = line
-                });
+                TriggerOnGameWinRpc(i, playerTypeArray[lineList[i].centerGridPosition[0], lineList[i].centerGridPosition[1]]);
+
                 break;
             };
         }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerOnGameWinRpc(int lineIndex, PlayerType winPlayerType)
+    {
+        OnGameWin?.Invoke(this, new OnGameWinEventArgs
+        {
+            line = lineList[lineIndex],
+            winPlayerType = winPlayerType
+        });
     }
 
     public PlayerType GetLocalPlayerType()
