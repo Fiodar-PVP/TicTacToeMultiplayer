@@ -17,6 +17,7 @@ public class GameManager : NetworkBehaviour
     public event EventHandler OnGameRematch;
     public event EventHandler OnGameTied;
     public event EventHandler OnScoreChanged;
+    public event EventHandler OnObjectPlaced;
     public event EventHandler OnCurrentPlayablePlayerTypeChanged;
     public event EventHandler<OnGameWinEventArgs> OnGameWin;
     public class OnGameWinEventArgs : EventArgs
@@ -49,7 +50,7 @@ public class GameManager : NetworkBehaviour
 
     public static GameManager Instance { get; private set; }
 
-    private PlayerType[,] playerTypeArray = new PlayerType[3,3];
+    private PlayerType[,] playerTypeArray = new PlayerType[3, 3];
     private PlayerType localPlayerType;
     private List<Line> lineList;
     private NetworkVariable<PlayerType> currentlyPlayablePlayerType = new NetworkVariable<PlayerType>();
@@ -125,7 +126,7 @@ public class GameManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if(NetworkManager.Singleton.LocalClientId == 0)
+        if (NetworkManager.Singleton.LocalClientId == 0)
         {
             localPlayerType = PlayerType.Cross;
         }
@@ -140,7 +141,7 @@ public class GameManager : NetworkBehaviour
         }
 
         currentlyPlayablePlayerType.OnValueChanged += CurrentlyPlayablePlayerType_OnValueChanged;
-        playerCrossScore.OnValueChanged += (int prevValue, int currentValue) => 
+        playerCrossScore.OnValueChanged += (int prevValue, int currentValue) =>
         {
             OnScoreChanged?.Invoke(this, EventArgs.Empty);
         };
@@ -158,7 +159,7 @@ public class GameManager : NetworkBehaviour
     private void NetworkManager_OnClientConnectedCallback(ulong obj)
     {
 
-        if(NetworkManager.Singleton.ConnectedClientsList.Count == 2)
+        if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
         {
             currentlyPlayablePlayerType.Value = PlayerType.Cross;
 
@@ -175,17 +176,19 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void ClickedOnGridPositionRpc(int x, int y, PlayerType playerType)
     {
-        if(currentlyPlayablePlayerType.Value != playerType)
+        if (currentlyPlayablePlayerType.Value != playerType)
         {
             return;
         }
 
-        if (playerTypeArray[x,y] != PlayerType.None)
+        if (playerTypeArray[x, y] != PlayerType.None)
         {
             return;
         }
 
         playerTypeArray[x, y] = playerType;
+
+        TriggerOnObjectPlacedRpc();
 
         OnClickedGridPosition?.Invoke(this, new OnClickedGridPositionEventArgs
         {
@@ -205,6 +208,12 @@ public class GameManager : NetworkBehaviour
         }
 
         TestWinner();
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerOnObjectPlacedRpc()
+    {
+        OnObjectPlaced?.Invoke(this, EventArgs.Empty);
     }
 
     private bool TestWinnerLine(Line line)
