@@ -16,6 +16,7 @@ public class GameManager : NetworkBehaviour
     public event EventHandler OnGameStarted;
     public event EventHandler OnGameRematch;
     public event EventHandler OnGameTied;
+    public event EventHandler OnScoreChanged;
     public event EventHandler OnCurrentPlayablePlayerTypeChanged;
     public event EventHandler<OnGameWinEventArgs> OnGameWin;
     public class OnGameWinEventArgs : EventArgs
@@ -52,6 +53,8 @@ public class GameManager : NetworkBehaviour
     private PlayerType localPlayerType;
     private List<Line> lineList;
     private NetworkVariable<PlayerType> currentlyPlayablePlayerType = new NetworkVariable<PlayerType>();
+    private NetworkVariable<int> playerCrossScore = new NetworkVariable<int>();
+    private NetworkVariable<int> playerCircleScore = new NetworkVariable<int>();
 
     private void Awake()
     {
@@ -137,6 +140,14 @@ public class GameManager : NetworkBehaviour
         }
 
         currentlyPlayablePlayerType.OnValueChanged += CurrentlyPlayablePlayerType_OnValueChanged;
+        playerCrossScore.OnValueChanged += (int prevValue, int currentValue) => 
+        {
+            OnScoreChanged?.Invoke(this, EventArgs.Empty);
+        };
+        playerCircleScore.OnValueChanged += (int prevValue, int currentValue) =>
+        {
+            OnScoreChanged?.Invoke(this, EventArgs.Empty);
+        };
     }
 
     private void CurrentlyPlayablePlayerType_OnValueChanged(PlayerType previousValue, PlayerType newValue)
@@ -221,13 +232,24 @@ public class GameManager : NetworkBehaviour
     {
         for (int i = 0; i < lineList.Count; i++)
         {
+            Line line = lineList[i];
             if (TestWinnerLine(lineList[i]))
             {
                 currentlyPlayablePlayerType.Value = PlayerType.None;
+                PlayerType winPlayerType = playerTypeArray[line.centerGridPosition.x, line.centerGridPosition.y];
 
-                TriggerOnGameWinRpc(i, playerTypeArray[lineList[i].centerGridPosition[0], lineList[i].centerGridPosition[1]]);
+                switch (winPlayerType)
+                {
+                    case PlayerType.Cross:
+                        playerCrossScore.Value++;
+                        break;
+                    case PlayerType.Circle:
+                        playerCircleScore.Value++;
+                        break;
+                }
 
-                break;
+                TriggerOnGameWinRpc(i, winPlayerType);
+                return;
             };
         }
 
@@ -297,5 +319,11 @@ public class GameManager : NetworkBehaviour
     private void TriggerOnGameRematchRpc()
     {
         OnGameRematch?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void GetScore(out int playerCrossScore,  out int playerCircleScore)
+    {
+        playerCrossScore = this.playerCrossScore.Value;
+        playerCircleScore = this.playerCircleScore.Value;
     }
 }
